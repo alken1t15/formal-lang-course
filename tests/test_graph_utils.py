@@ -81,7 +81,9 @@ def test_two_cycles_graph_has_common_vertex(tmp_path):
 
 
 def test_two_cycles_graph_uses_requested_labels(tmp_path):
-    graph = create_two_cycles_graph(2, 3, ("left", "right"), tmp_path / "two_cycles.dot")
+    graph = create_two_cycles_graph(
+        2, 3, ("left", "right"), tmp_path / "two_cycles.dot"
+    )
 
     assert {edge_data["label"] for _, _, edge_data in graph.edges(data=True)} == {
         "left",
