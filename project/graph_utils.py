@@ -11,15 +11,10 @@ from cfpq_data.graphs.generators import labeled_two_cycles_graph
 def get_graph_info(graph_name: str) -> tuple[int, int, set[str]]:
     """Return the number of nodes, edges, and edge labels of a dataset graph.
 
-    Newer CFPQ_Data releases provide ``load_graph`` directly. Version 4.0.3,
-    which is fixed in this project lock file, exposes the same operation as
-    ``download`` followed by ``graph_from_csv``.
+    The graph is downloaded from the CFPQ_Data dataset and parsed from CSV.
     """
-    load_graph = getattr(cfpq_data, "load_graph", None)
-    if load_graph is not None:
-        graph = load_graph(graph_name)
-    else:
-        graph = cfpq_data.graph_from_csv(cfpq_data.download(graph_name))
+    graph_path = cfpq_data.download(graph_name)
+    graph = cfpq_data.graph_from_csv(graph_path)
 
     labels = {edge_data["label"] for _, _, edge_data in graph.edges(data=True)}
     return graph.number_of_nodes(), graph.number_of_edges(), labels

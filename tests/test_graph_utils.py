@@ -12,7 +12,8 @@ def test_get_graph_info_returns_graph_statistics(monkeypatch):
     graph.add_edge(0, 1, label="a")
     graph.add_edge(1, 0, label="b")
     graph.add_edge(1, 2, label="a")
-    monkeypatch.setattr(cfpq_data, "load_graph", lambda _: graph, raising=False)
+    monkeypatch.setattr(cfpq_data, "download", lambda _: "example.csv")
+    monkeypatch.setattr(cfpq_data, "graph_from_csv", lambda _: graph)
 
     assert get_graph_info("example") == (3, 3, {"a", "b"})
 
@@ -36,7 +37,8 @@ def test_create_two_cycles_graph_writes_dot_file(tmp_path):
 def test_get_graph_info_returns_empty_labels_for_graph_without_edges(monkeypatch):
     graph = MultiDiGraph()
     graph.add_nodes_from([0, 1])
-    monkeypatch.setattr(cfpq_data, "load_graph", lambda _: graph, raising=False)
+    monkeypatch.setattr(cfpq_data, "download", lambda _: "example.csv")
+    monkeypatch.setattr(cfpq_data, "graph_from_csv", lambda _: graph)
 
     assert get_graph_info("empty") == (2, 0, set())
 
@@ -45,19 +47,30 @@ def test_get_graph_info_deduplicates_repeated_labels(monkeypatch):
     graph = MultiDiGraph()
     graph.add_edge(0, 1, label="a")
     graph.add_edge(1, 2, label="a")
-    monkeypatch.setattr(cfpq_data, "load_graph", lambda _: graph, raising=False)
+    monkeypatch.setattr(cfpq_data, "download", lambda _: "example.csv")
+    monkeypatch.setattr(cfpq_data, "graph_from_csv", lambda _: graph)
 
     assert get_graph_info("repeated-labels") == (3, 2, {"a"})
 
 
-def test_get_graph_info_supports_cfpq_data_4(monkeypatch):
+def test_get_graph_info_uses_downloaded_graph_path(monkeypatch):
     graph = MultiDiGraph()
     graph.add_edge(0, 1, label="edge")
-    monkeypatch.delattr(cfpq_data, "load_graph", raising=False)
-    monkeypatch.setattr(cfpq_data, "download", lambda _: "example.csv")
-    monkeypatch.setattr(cfpq_data, "graph_from_csv", lambda _: graph)
+    calls = []
+
+    def download(name):
+        calls.append(("download", name))
+        return "example.csv"
+
+    def graph_from_csv(path):
+        calls.append(("graph_from_csv", path))
+        return graph
+
+    monkeypatch.setattr(cfpq_data, "download", download)
+    monkeypatch.setattr(cfpq_data, "graph_from_csv", graph_from_csv)
 
     assert get_graph_info("example") == (2, 1, {"edge"})
+    assert calls == [("download", "example"), ("graph_from_csv", "example.csv")]
 
 
 def test_two_cycles_graph_has_common_vertex(tmp_path):
