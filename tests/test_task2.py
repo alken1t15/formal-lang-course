@@ -2,6 +2,7 @@
 
 from networkx import MultiDiGraph
 
+from project.graph_utils import create_two_cycles_graph
 from project.task2 import graph_to_nfa, regex_to_dfa
 
 
@@ -50,6 +51,16 @@ def test_graph_to_nfa_uses_all_vertices_when_states_are_empty():
     assert automaton.accepts(["a"])
 
 
+def test_graph_to_nfa_defaults_to_all_vertices():
+    graph = MultiDiGraph()
+    graph.add_edge(0, 1, label="a")
+
+    automaton = graph_to_nfa(graph)
+
+    assert automaton.accepts([])
+    assert automaton.accepts(["a"])
+
+
 def test_graph_to_nfa_keeps_parallel_edges():
     graph = MultiDiGraph()
     graph.add_edge(0, 1, label="a")
@@ -68,3 +79,13 @@ def test_graph_to_nfa_ignores_unlabeled_edges():
     automaton = graph_to_nfa(graph, {0}, {1})
 
     assert automaton.is_empty()
+
+
+def test_graph_to_nfa_accepts_cycles_from_task_1(tmp_path):
+    graph = create_two_cycles_graph(2, 3, ("a", "b"), tmp_path / "cycles.dot")
+
+    automaton = graph_to_nfa(graph, {0}, {0})
+
+    assert automaton.accepts(["a", "a", "a"])
+    assert automaton.accepts(["b", "b", "b", "b"])
+    assert not automaton.accepts(["a", "b"])

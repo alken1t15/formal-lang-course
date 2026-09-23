@@ -19,12 +19,12 @@ def regex_to_dfa(regex: str) -> DeterministicFiniteAutomaton:
 
 def graph_to_nfa(
     graph: MultiDiGraph,
-    start_states: Set[int],
-    final_states: Set[int],
+    start_states: Set[int] | None = None,
+    final_states: Set[int] | None = None,
 ) -> NondeterministicFiniteAutomaton:
     """Convert a labeled directed multigraph into a nondeterministic FA.
 
-    Empty ``start_states`` or ``final_states`` means that every graph vertex
+    Omitted or empty ``start_states`` or ``final_states`` means every graph vertex
     is respectively a start or final state.
     """
     graph_states = set(graph.nodes)
