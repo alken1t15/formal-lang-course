@@ -44,7 +44,7 @@ def graph_to_nfa(
         automaton.add_final_state(State(state))
 
     for source, target, edge_data in graph.edges(data=True):
-        if "label" in edge_data:
+        if edge_data.get("label") is not None:
             automaton.add_transition(
                 State(source), Symbol(edge_data["label"]), State(target)
             )

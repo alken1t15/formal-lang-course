@@ -97,9 +97,10 @@ def test_graph_to_nfa_rejects_vertices_outside_graph():
         graph_to_nfa(graph, {0}, {1})
 
 
-def test_graph_to_nfa_ignores_unlabeled_edges():
+@pytest.mark.parametrize("edge_data", [{}, {"label": None}])
+def test_graph_to_nfa_ignores_unlabeled_edges(edge_data):
     graph = MultiDiGraph()
-    graph.add_edge(0, 1)
+    graph.add_edge(0, 1, **edge_data)
 
     automaton = graph_to_nfa(graph, {0}, {1})
 
