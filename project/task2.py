@@ -31,6 +31,10 @@ def graph_to_nfa(
     starts = graph_states if not start_states else set(start_states)
     finals = graph_states if not final_states else set(final_states)
 
+    if not starts <= graph_states:
+        raise ValueError("start_states contains vertices outside the graph")
+    if not finals <= graph_states:
+        raise ValueError("final_states contains vertices outside the graph")
     automaton = NondeterministicFiniteAutomaton(
         states={State(state) for state in graph_states}
     )

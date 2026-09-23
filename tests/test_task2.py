@@ -1,6 +1,7 @@
 """Tests for finite automata construction from task 2."""
 
 import cfpq_data
+import pytest
 from networkx import MultiDiGraph
 
 from project.graph_utils import create_two_cycles_graph
@@ -84,6 +85,16 @@ def test_graph_to_nfa_preserves_isolated_vertices():
 
     assert {state.value for state in automaton.states} == set(graph.nodes)
     assert automaton.accepts(["a"])
+
+
+def test_graph_to_nfa_rejects_vertices_outside_graph():
+    graph = MultiDiGraph()
+    graph.add_node(0)
+
+    with pytest.raises(ValueError, match="start_states"):
+        graph_to_nfa(graph, {1}, {0})
+    with pytest.raises(ValueError, match="final_states"):
+        graph_to_nfa(graph, {0}, {1})
 
 
 def test_graph_to_nfa_ignores_unlabeled_edges():
