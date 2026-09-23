@@ -75,6 +75,17 @@ def test_graph_to_nfa_keeps_parallel_edges():
     assert automaton.accepts(["b"])
 
 
+def test_graph_to_nfa_preserves_isolated_vertices():
+    graph = MultiDiGraph()
+    graph.add_nodes_from([0, 1, 7])
+    graph.add_edge(0, 1, label="a")
+
+    automaton = graph_to_nfa(graph, {0}, {1})
+
+    assert {state.value for state in automaton.states} == set(graph.nodes)
+    assert automaton.accepts(["a"])
+
+
 def test_graph_to_nfa_ignores_unlabeled_edges():
     graph = MultiDiGraph()
     graph.add_edge(0, 1)

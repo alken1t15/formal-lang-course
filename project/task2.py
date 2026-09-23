@@ -31,7 +31,9 @@ def graph_to_nfa(
     starts = graph_states if not start_states else set(start_states)
     finals = graph_states if not final_states else set(final_states)
 
-    automaton = NondeterministicFiniteAutomaton()
+    automaton = NondeterministicFiniteAutomaton(
+        states={State(state) for state in graph_states}
+    )
     for state in starts:
         automaton.add_start_state(State(state))
     for state in finals:
