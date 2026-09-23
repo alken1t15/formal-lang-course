@@ -16,7 +16,11 @@ def get_graph_info(graph_name: str) -> tuple[int, int, set[str]]:
     graph_path = cfpq_data.download(graph_name)
     graph = cfpq_data.graph_from_csv(graph_path)
 
-    labels = {edge_data["label"] for _, _, edge_data in graph.edges(data=True)}
+    labels = {
+        edge_data["label"]
+        for _, _, edge_data in graph.edges(data=True)
+        if "label" in edge_data
+    }
     return graph.number_of_nodes(), graph.number_of_edges(), labels
 
 

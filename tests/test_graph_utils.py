@@ -53,6 +53,16 @@ def test_get_graph_info_deduplicates_repeated_labels(monkeypatch):
     assert get_graph_info("repeated-labels") == (3, 2, {"a"})
 
 
+def test_get_graph_info_ignores_edges_without_labels(monkeypatch):
+    graph = MultiDiGraph()
+    graph.add_edge(0, 1)
+    graph.add_edge(1, 2, label="a")
+    monkeypatch.setattr(cfpq_data, "download", lambda _: "missing-label.csv")
+    monkeypatch.setattr(cfpq_data, "graph_from_csv", lambda _: graph)
+
+    assert get_graph_info("missing-label") == (3, 2, {"a"})
+
+
 def test_get_graph_info_uses_downloaded_graph_path(monkeypatch):
     graph = MultiDiGraph()
     graph.add_edge(0, 1, label="edge")
