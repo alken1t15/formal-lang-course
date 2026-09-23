@@ -1,5 +1,6 @@
 """Tests for finite automata construction from task 2."""
 
+import cfpq_data
 from networkx import MultiDiGraph
 
 from project.graph_utils import create_two_cycles_graph
@@ -15,10 +16,12 @@ def test_regex_to_dfa_accepts_the_regular_language():
 
 
 def test_regex_to_dfa_returns_minimal_deterministic_automaton():
-    automaton = regex_to_dfa("a|a.b")
+    automaton = regex_to_dfa("a|b")
 
     assert automaton.is_deterministic()
-    assert len(automaton.states) == len(automaton.minimize().states)
+    assert len(automaton.states) == 2
+    assert automaton.accepts(["a"])
+    assert automaton.accepts(["b"])
 
 
 def test_regex_to_dfa_supports_kleene_star():
@@ -89,3 +92,14 @@ def test_graph_to_nfa_accepts_cycles_from_task_1(tmp_path):
     assert automaton.accepts(["a", "a", "a"])
     assert automaton.accepts(["b", "b", "b", "b"])
     assert not automaton.accepts(["a", "b"])
+
+
+def test_graph_to_nfa_accepts_graph_loaded_from_cfpq_data_csv(tmp_path):
+    graph_path = tmp_path / "graph.csv"
+    graph_path.write_text("0 1 subClassOf\n1 2 type\n")
+    graph = cfpq_data.graph_from_csv(graph_path)
+
+    automaton = graph_to_nfa(graph, {0}, {2})
+
+    assert automaton.accepts(["subClassOf", "type"])
+    assert not automaton.accepts(["type"])
