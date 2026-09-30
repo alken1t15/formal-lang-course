@@ -10,7 +10,7 @@ from project.task2 import regex_to_dfa
 from project.task3 import AdjacencyMatrixFA, intersect_automata
 
 
-@pytest.mark.parametrize("regex", ["a", "a*", "a b | c", "(a | b)* a"])
+@pytest.mark.parametrize("regex", ["", "epsilon", "a", "a*", "a b | c", "(a | b)* a"])
 def test_matrix_automaton_matches_dfa(regex):
     dfa = regex_to_dfa(regex)
     matrix_automaton = AdjacencyMatrixFA(dfa)
@@ -96,6 +96,8 @@ def test_transitive_closure_includes_long_paths_and_cycles():
 @pytest.mark.parametrize(
     "first, second",
     [
+        ("", "a*"),
+        ("epsilon", "a*"),
         ("a*", "b*"),
         ("a", "b"),
         ("(a | b)*", "a b*"),

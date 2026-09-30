@@ -167,3 +167,24 @@ def test_rpq_requires_labels_in_the_requested_order():
     # Both final vertices are reachable, but only one path spells "a b".
     assert tensor_based_rpq("a b", graph, {0}, {2, 4}) == {(0, 4)}
     assert tensor_based_rpq("b a", graph, {0}, {2, 4}) == {(0, 2)}
+
+
+def test_rpq_empty_regex_defines_empty_language():
+    graph = MultiDiGraph()
+    graph.add_edge(10, 20, label="a")
+    graph.add_node(99)
+    assert tensor_based_rpq("", graph, set(graph), set(graph)) == set()
+    assert tensor_based_rpq("epsilon", graph, set(graph), set(graph)) == {
+        (10, 10),
+        (20, 20),
+        (99, 99),
+    }
+
+
+def test_rpq_treats_multicharacter_label_as_one_symbol():
+    graph = MultiDiGraph()
+    graph.add_edge(-5, 100, label="hello")
+    graph.add_edge(100, 200, label="world")
+    assert tensor_based_rpq("hello", graph, {-5}, {100}) == {(-5, 100)}
+    assert tensor_based_rpq("hello world", graph, {-5}, {200}) == {(-5, 200)}
+    assert tensor_based_rpq("h e l l o", graph, {-5}, {100}) == set()
