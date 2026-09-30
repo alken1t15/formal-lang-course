@@ -17,6 +17,7 @@ class AdjacencyMatrixFA:
     """
 
     def __init__(self, automaton: NondeterministicFiniteAutomaton | None = None):
+        # Include isolated states too; transitions alone do not list them.
         self.states = tuple(automaton.states) if automaton is not None else ()
         self.state_indices = {state: index for index, state in enumerate(self.states)}
         self.start_states = set()
@@ -62,6 +63,7 @@ class AdjacencyMatrixFA:
             matrix = self.matrices.get(Symbol(symbol))
             if matrix is None:
                 return False
+            # Boolean multiplication keeps every possible NFA branch active.
             active = active @ matrix
             if active.nnz == 0:
                 return False
@@ -70,12 +72,16 @@ class AdjacencyMatrixFA:
     def transitive_closure(self) -> csr_matrix:
         """Return reachability, including paths of length zero."""
         size = len(self.states)
+        # The diagonal includes empty paths, needed for the empty word.
         reachable = eye(size, format="csr", dtype=bool)
+        # Reachability ignores labels, so combine transitions of all symbols.
         for matrix in self.matrices.values():
             reachable = reachable + matrix
         # Each squaring doubles the maximum path length represented so far.
         while True:
             expanded = reachable + reachable @ reachable
+            # Entries only change from False to True: unchanged nnz means
+            # no new reachable pairs were added.
             if expanded.nnz == reachable.nnz:
                 return expanded
             reachable = expanded
@@ -111,6 +117,7 @@ def intersect_automata(
         for first in automaton1.final_states
         for second in automaton2.final_states
     }
+    # Both automata must read the same symbol in each product transition.
     for symbol in automaton1.matrices.keys() & automaton2.matrices.keys():
         result.matrices[symbol] = kron(
             automaton1.matrices[symbol], automaton2.matrices[symbol], format="csr"
@@ -137,6 +144,8 @@ def tensor_based_rpq(
     for start in product.start_states:
         row = reachable.getrow(start)
         for final in set(row.indices) & product.final_states:
+            # Graph states are the second component of the product; modulo
+            # recovers their indices even when vertex numbers are not consecutive.
             source = graph_automaton.states[start % graph_size].value
             target = graph_automaton.states[final % graph_size].value
             answer.add((source, target))
