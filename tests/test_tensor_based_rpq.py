@@ -118,3 +118,52 @@ def test_rpq_matches_independent_graph_search(seed):
     assert list(graph.edges(keys=True, data=True)) == before
     assert len(starts) == 2
     assert len(finals) == 3
+
+
+def test_rpq_is_unchanged_by_vertex_renaming():
+    graph = MultiDiGraph()
+    graph.add_nodes_from([0, 1, 2, 3])
+    graph.add_edges_from(
+        [
+            (0, 1, {"label": "a"}),
+            (1, 2, {"label": "b"}),
+            (2, 0, {"label": "a"}),
+            (0, 2, {"label": "b"}),
+        ]
+    )
+    renaming = {0: 900, 1: -7, 2: 42, 3: 10000}
+    renamed = MultiDiGraph()
+    # A different insertion order must not affect the index correspondence.
+    renamed.add_nodes_from(renaming[node] for node in reversed(list(graph)))
+    for source, target, data in graph.edges(data=True):
+        renamed.add_edge(renaming[source], renaming[target], **data)
+    starts, finals = {0, 3}, {0, 2, 3}
+    for regex in ["a b", "(a | b)*", "epsilon"]:
+        expected = {
+            (renaming[source], renaming[target])
+            for source, target in tensor_based_rpq(regex, graph, starts, finals)
+        }
+        assert (
+            tensor_based_rpq(
+                regex,
+                renamed,
+                {renaming[node] for node in starts},
+                {renaming[node] for node in finals},
+            )
+            == expected
+        )
+
+
+def test_rpq_requires_labels_in_the_requested_order():
+    graph = MultiDiGraph()
+    graph.add_edges_from(
+        [
+            (0, 1, {"label": "b"}),
+            (1, 2, {"label": "a"}),
+            (0, 3, {"label": "a"}),
+            (3, 4, {"label": "b"}),
+        ]
+    )
+    # Both final vertices are reachable, but only one path spells "a b".
+    assert tensor_based_rpq("a b", graph, {0}, {2, 4}) == {(0, 4)}
+    assert tensor_based_rpq("b a", graph, {0}, {2, 4}) == {(0, 2)}

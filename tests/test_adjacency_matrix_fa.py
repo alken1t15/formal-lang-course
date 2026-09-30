@@ -139,3 +139,33 @@ def test_intersection_with_empty_automaton():
         intersection = intersect_automata(first, second)
         assert intersection.is_empty()
         assert not intersection.accepts([])
+
+
+def test_intersection_with_multiple_start_and_final_states():
+    first = NondeterministicFiniteAutomaton()
+    first.add_start_state("left")
+    first.add_start_state("right")
+    first.add_final_state("left_final")
+    first.add_final_state("right_final")
+    first.add_transitions(
+        [
+            ("left", "a", "left_final"),
+            ("right", "b", "right_final"),
+        ]
+    )
+    second = NondeterministicFiniteAutomaton()
+    second.add_start_state(10)
+    second.add_start_state(20)
+    second.add_final_state(30)
+    second.add_final_state(40)
+    second.add_transitions([(10, "b", 30), (20, "a", 40)])
+    intersection = intersect_automata(
+        AdjacencyMatrixFA(first), AdjacencyMatrixFA(second)
+    )
+    assert len(intersection.start_states) == 4
+    assert len(intersection.final_states) == 4
+    for word in [[], ["a"], ["b"], ["c"], ["a", "b"]]:
+        assert intersection.accepts(word) == (
+            first.accepts(word) and second.accepts(word)
+        )
+    assert not intersection.is_empty()
