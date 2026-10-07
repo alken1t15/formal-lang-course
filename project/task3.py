@@ -60,7 +60,7 @@ class AdjacencyMatrixFA:
             dtype=bool,
         )
         for symbol in word:
-            matrix = self.matrices.get(Symbol(symbol))
+            matrix = self.matrices.get(symbol)
             if matrix is None:
                 return False
             # Boolean multiplication keeps every possible NFA branch active.
