@@ -160,3 +160,36 @@ def test_bfs_cycle_terminates_without_accepting_final_state():
         (20, 10),
         (20, 20),
     }
+
+
+def test_bfs_does_not_build_full_automaton_intersection(monkeypatch):
+    import scipy.sparse
+    import project.task3 as task3
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("MS-BFS must not construct the full intersection")
+
+    monkeypatch.setattr(scipy.sparse, "kron", forbidden)
+    monkeypatch.setattr(task3, "kron", forbidden)
+    monkeypatch.setattr(task3, "intersect_automata", forbidden)
+    monkeypatch.setattr(task3.AdjacencyMatrixFA, "transitive_closure", forbidden)
+    graph = MultiDiGraph()
+    graph.add_edge(10, 30, label="a")
+    graph.add_edge(20, 30, label="a")
+    graph.add_edge(30, 30, label="b")
+    assert ms_bfs_based_rpq("a b*", graph, {10, 20}, {30}) == {(10, 30), (20, 30)}
+
+
+def test_bfs_sources_do_not_share_query_progress():
+    graph = MultiDiGraph()
+    graph.add_edge(0, 1, label="a")
+    graph.add_edge(1, 2, label="b")
+    # Source 1 has not read "a", even though source 0 reaches vertex 1 after it.
+    assert ms_bfs_based_rpq("a b", graph, {0, 1}, {2}) == {(0, 2)}
+
+
+def test_bfs_epsilon_named_edge_is_not_an_empty_transition():
+    graph = MultiDiGraph()
+    graph.add_edge(10, 20, label="epsilon")
+    assert ms_bfs_based_rpq("a*", graph, {10}, {20}) == set()
+    assert ms_bfs_based_rpq("epsilon", graph, {10}, {10, 20}) == {(10, 10)}
